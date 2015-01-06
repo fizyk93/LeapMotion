@@ -43,7 +43,7 @@ class LeapMotionListener(Leap.Listener):
             normal = hand.palm_normal
             direction = hand.direction
 
-            print "Pitch: " + str(direction.pitch + Leap.RAD_TO_DEG) + " Roll " + str(normal.roll * Leap.RAD_TO_DEG) + " Yaw: " + str(direction.yaw * Leap.RAD_TO_DEG)
+            # print "Pitch: " + str(direction.pitch + Leap.RAD_TO_DEG) + " Roll " + str(normal.roll * Leap.RAD_TO_DEG) + " Yaw: " + str(direction.yaw * Leap.RAD_TO_DEG)
 
             # arm: Tutorial 5
             # fingers: Tutorial 6
@@ -51,11 +51,11 @@ class LeapMotionListener(Leap.Listener):
             for gesture in frame.gestures():
                 if gesture.type == Leap.Gesture.TYPE_SWIPE:
                     swipe = SwipeGesture(gesture)
-                    print "Swipe ID: " + str(swipe.id) \
-                          + " State: " + self.stateNames[gesture.state] \
-                          + " Position: " + str(swipe.position) \
-                          + " Direction: " + str(swipe.direction) \
-                          + " Speed [mm/s]: " + str(swipe.speed)
+                    # print "Swipe ID: " + str(swipe.id) \
+                    #       + " State: " + self.stateNames[gesture.state] \
+                    #       + " Position: " + str(swipe.position) \
+                    #       + " Direction: " + str(swipe.direction) \
+                    #       + " Speed [mm/s]: " + str(swipe.speed)
 
 
 def main():
@@ -63,6 +63,8 @@ def main():
     controller = Leap.Controller()
 
     controller.add_listener(listener)
+
+
 
     print "Press enter to quit"
 

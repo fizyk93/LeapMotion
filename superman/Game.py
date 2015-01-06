@@ -6,10 +6,64 @@
 #   Version: 2.0                            #
 #############################################
 import pygame, random, sys
+import Leap, sys, thread, time
+from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 
 pygame.init()
 
 screen = pygame.display.set_mode((900, 700),pygame.FULLSCREEN)
+
+class LeapMotionListener(Leap.Listener):
+    fingerNames = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
+    boneNames = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
+    stateNames = ['STATE_INVALID', 'STATE_START', 'STATE_UPDATE', 'STATE_END']
+    # superman = Superman()
+
+    def on_init(self, controller):
+        print "Initialized"
+        # self.superman = superman
+
+    def on_connect(self, controller):
+        print "Motion Sensor Connected"
+
+        controller.enable_gesture(Leap.Gesture.TYPE_CIRCLE);
+        controller.enable_gesture(Leap.Gesture.TYPE_KEY_TAP);
+        controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP);
+        controller.enable_gesture(Leap.Gesture.TYPE_SWIPE);
+
+    def setSuperman(self,superman):
+        self.superman = superman
+
+    def on_disconnect(self, controller):
+        print "Motion Sensor Disconnected"
+
+    def on_exit(self, controller):
+        print "Exited"
+
+    def on_frame(self, controller):
+        frame = controller.frame()
+
+        for hand in frame.hands:
+            handType = "Left Hand" if hand.is_left else "Right Hand"
+
+            szczal = hand.grab_strength
+            if szczal > 0.9:
+                shoot(self.superman.rect.centerx, self.superman.rect.centery)
+
+
+            x = hand.palm_position[0]
+            z = hand.palm_position[2]
+            self.superman.myUpdate(x,z)
+
+            normal = hand.palm_normal
+            direction = hand.direction
+
+            for gesture in frame.gestures():
+                if gesture.type == Leap.Gesture.TYPE_SWIPE:
+                    swipe = SwipeGesture(gesture)
+
+
+
 class Superman(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -17,7 +71,10 @@ class Superman(pygame.sprite.Sprite):
         print "SUPERMAN!"
         self.rect = self.image.get_rect()
         self.rect.inflate_ip(-10,-10)
-               
+
+        self.rect.centerx = 450
+        self.rect.centery = 350
+
         if not pygame.mixer:
             print "NO sound!!!"
         else:
@@ -25,9 +82,14 @@ class Superman(pygame.sprite.Sprite):
             
             self.explosion = pygame.mixer.Sound("explosion.ogg")
             self.collect = pygame.mixer.Sound("pickup.wav")
-        
+
+    def myUpdate(self,x,y):
+        self.rect.centerx = 450 + 1.8*x
+        self.rect.centery = 350 + 1.5*y
+
     def update(self):
         mousex, mousey = pygame.mouse.get_pos()
+        return
         self.rect.centerx = mousex
         self.rect.centery = mousey
         
@@ -151,9 +213,16 @@ def chkey():
     if pygame.key.get_pressed()[pygame.K_SPACE]:
         weaponSprites.add(hv)
         hv.rect.center = pygame.mouse.get_pos()
-    
+
+def shoot(x, y):
+    weaponSprites.add(hv)
+    hv.rect.center = (x, y)
+
        
 def game():
+
+
+
     pygame.display.set_caption("Superman")
     kryptox = KryptoX()
     dark = Darkseid()   
@@ -166,6 +235,14 @@ def game():
     score = Score()
     powerup = PowerUp()
     superman = Superman()
+
+    print "Start"
+    listener = LeapMotionListener()
+    listener.setSuperman(superman)
+    controller = Leap.Controller()
+    controller.add_listener(listener)
+    print "Jest"
+
     goodSprites = pygame.sprite.Group(space,kryptox,superman)
     badSprites = pygame.sprite.Group(k1,k2,k3,k4,k5,dark)
     scoreSprite = pygame.sprite.Group(score)
@@ -209,6 +286,7 @@ def game():
             score.lives -= 1
             if score.lives <= 0:
                 keepGoing = False
+                controller.remove_listener(listener)
               
                 
 	for theK in hitK:
@@ -216,6 +294,7 @@ def game():
 
         
         goodSprites.update()
+        
         goodSprites.draw(screen)
         badSprites.update()
         badSprites.draw(screen)
